@@ -11,17 +11,18 @@ A custom, animated confirmation button for iOS with a completion handler. Writte
 
 # Additional Details
 1. There are a number of IBInspectable properties that can be changed in the storyboard.
-- The progress indicator's active and inactive colours.
-- The button's corner radius.
-- The icon's stroke colour.
+     - The progress indicator's active and inactive colours.
+     - The progress indicator's border width.
+     - The button's corner radius.
+     - The icon's stroke colour.
 
 2. The button and its icon are resolution-independent.
-- The icon's fill settings can be manipulated in code by changed CheckImageView's 'resizingBehavior' property.
+     - The icon's fill settings can be manipulated in code by changed CheckImageView's 'resizingBehavior' property.
 
 3. When the animation completes, it can optionally call a completion handler.
-- You can set the completion handler's implementation details by injecting a function into the 'completion' instance property.
+     - You can set the completion handler's implementation details by injecting a function into the 'completion' instance property.
 
-# For example:
+# Example:
 ```
 let button = HappyButton()
 
