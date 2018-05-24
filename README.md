@@ -15,18 +15,20 @@ A custom, animated confirmation button for iOS with a completion handler. Writte
      - The progress indicator's border width.
      - The button's corner radius.
      - The icon's stroke colour.
+     - Whether the animation should run once or loop until interrupted by a callback.
 
 2. The button and its icon are resolution-independent.
      - The icon's fill settings can be manipulated in code by changed CheckImageView's 'resizingBehavior' property.
 
 3. When the animation completes, it can optionally call a completion handler.
      - You can set the completion handler's implementation details by injecting a function into the 'completion' instance property.
+     - If you opt to loop the animation, you can pass in your completionHandler via a trailing closure when you call button.perform(action: andCall: ).
 
 # Example:
 ```
 let button = HappyButton()
 
 button.completion = {
-     print("Animation completed.
+     print("Animation completed.")
 }
 ```
