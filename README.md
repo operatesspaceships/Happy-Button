@@ -1,7 +1,9 @@
 # Happy Button
 A custom, animated confirmation button for iOS with a completion handler. Written in Swift.
 
-![Demo](https://user-images.githubusercontent.com/38790651/40369485-afd92994-5da3-11e8-88bb-c8cd890d286b.gif)
+![Run Once Demo](https://user-images.githubusercontent.com/38790651/40490696-da57c6dc-5f31-11e8-9e21-191770f4b046.gif)
+
+![Loop Demo](https://user-images.githubusercontent.com/38790651/40491083-c4c0366e-5f32-11e8-9d8d-e95e5cb1cab5.gif)
 
 # Usage
 1. Drag the HappyButton.swift and SeahorseStyleKit.swift into your Xcode project.
