@@ -39,6 +39,12 @@ class CheckImageView: UIView {
 
 @IBDesignable class HappyButton: UIButton {
 
+    // MARK: - Animation Actions
+    public enum Action {
+        case showSuccessAnimation
+        case showResetAnimation
+    }
+    
     // MARK: - IBInspectables
     @IBInspectable var cornerRadius:CGFloat = 8 {
         didSet {
@@ -50,13 +56,18 @@ class CheckImageView: UIView {
     @IBInspectable var inactiveProgressIndicatorColor = UIColor(red:0.85, green:0.85, blue:0.85, alpha:1.0).cgColor
     @IBInspectable var activeProgressIndicatorColor = UIColor(red:1.00, green:0.23, blue:0.18, alpha:1.0).cgColor
     @IBInspectable var buttonIconStrokeColor: UIColor = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000)
-    
+    /**
+     If true, the animation will loop until it receives an instruction from .perform(action: ). By default, this property is set to false.
+     */
+    @IBInspectable public var animationShouldLoop: Bool = false
     
     // MARK: - Variables
     private var activeProgressIndicatorLayer : CAShapeLayer!
     private var inactiveProgressIndicatorLayer: CAShapeLayer!
     private var checkImage = CheckImageView()
     private var savedFrame: CGRect = CGRect.zero
+    
+    
     var completion: ()->() = {}
     
     
@@ -65,15 +76,21 @@ class CheckImageView: UIView {
         super.init(frame: frame)
         self.clipsToBounds = false
         self.layer.masksToBounds = false
+        self.applyAccessibility()
+    }
+    
+    private final func applyAccessibility() {
+        self.isAccessibilityElement = true
+        self.accessibilityHint = "Tap to add item to shopping bag"
+        self.accessibilityLabel = "Add to bag"
+        self.accessibilityActivate()
     }
     
     // MARK: - Interactions
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
-        
         animateButtonTransition()
     }
-    
     
     // MARK: - Set up check image
     private func setUpCheckImage() {
@@ -89,7 +106,6 @@ class CheckImageView: UIView {
         self.addSubview(checkImage)
         self.bringSubview(toFront: checkImage)
         self.checkImage.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
-
     }
     
     // MARK: - Set up inactive progress indicator
@@ -175,30 +191,80 @@ class CheckImageView: UIView {
             self.insertActiveProgressIndicator()
             self.layer.borderColor = UIColor.white.withAlphaComponent(0.0).cgColor
             
-            self.animateActiveProgressIndicator()
+            self.animateActiveProgressIndicator(andRepeatUntilStopped: self.animationShouldLoop)
         })
     }
     
-    private func animateActiveProgressIndicator() {
+    private func animateActiveProgressIndicator(andRepeatUntilStopped: Bool) {
         
-        let animation = CABasicAnimation(keyPath: "strokeEnd")
-        animation.fromValue = 0
-        self.activeProgressIndicatorLayer.strokeEnd = 1.0
-        animation.toValue = 1
-        animation.isRemovedOnCompletion = false
-
-        CATransaction.setAnimationDuration(0.7)
-        CATransaction.setCompletionBlock({
-            self.restoreButtonState()
-        })
+        if andRepeatUntilStopped {
+            
+            // Loop animation until callback received
+            let strokeEndAnimation = CAKeyframeAnimation(keyPath: "strokeEnd")
+            strokeEndAnimation.values = [0,1]
+            strokeEndAnimation.keyTimes = [0,1]
+            strokeEndAnimation.duration = 1
+            strokeEndAnimation.repeatCount = .infinity
+            self.activeProgressIndicatorLayer.strokeEnd = 1
+            
+            let strokeStartAnimation = CAKeyframeAnimation(keyPath: "strokeStart")
+            strokeStartAnimation.values = [0,1]
+            strokeStartAnimation.keyTimes = [0.25,1]
+            strokeStartAnimation.duration = 1
+            strokeStartAnimation.repeatCount = .infinity
+            self.activeProgressIndicatorLayer.strokeStart = 1
+            
+            CATransaction.begin()
+            self.activeProgressIndicatorLayer.add(strokeEndAnimation, forKey: strokeEndAnimation.keyPath)
+            self.activeProgressIndicatorLayer.add(strokeStartAnimation, forKey: strokeStartAnimation.keyPath)
+            CATransaction.commit()
+            
+        } else {
+            
+            // Run animation once and show success animation
+            let animation = CABasicAnimation(keyPath: "strokeEnd")
+            animation.fromValue = 0
+            self.activeProgressIndicatorLayer.strokeEnd = 1.0
+            animation.toValue = 1
+            animation.isRemovedOnCompletion = true
+            
+            CATransaction.setAnimationDuration(0.7)
+            CATransaction.setCompletionBlock({
+                self.showSuccessAnimation()
+            })
+            
+            CATransaction.begin()
+            self.activeProgressIndicatorLayer.add(animation, forKey: animation.keyPath)
+            CATransaction.commit()
+            CATransaction.completionBlock()
+        }
         
-        CATransaction.begin()
-        self.activeProgressIndicatorLayer.add(animation, forKey: animation.keyPath)
-        CATransaction.commit()
-        CATransaction.completionBlock()
     }
     
-    private func restoreButtonState() {
+    private func resetAnimation() {
+        
+        // Restore rotation to pre-animated state
+        self.transform = .identity
+        
+        UIView.animate(withDuration: 0.3, animations: {
+            
+            self.inactiveProgressIndicatorLayer.opacity = 0
+            self.activeProgressIndicatorLayer.opacity = 0
+            self.backgroundColor = UIColor(red:1.00, green:0.23, blue:0.18, alpha:1.0)
+            self.layer.borderWidth = 0
+            
+            self.frame = self.savedFrame
+            self.titleLabel?.transform = .identity
+            
+            self.layer.cornerRadius = self.cornerRadius
+            
+        }, completion: {_  in
+            self.completion()
+            self.isUserInteractionEnabled = true
+        })
+    }
+    
+    private func showSuccessAnimation() {
         
         // Restore rotation to pre-animated state
         self.transform = .identity
@@ -217,7 +283,7 @@ class CheckImageView: UIView {
             
         }, completion: nil)
         
-        UIView.animate(withDuration: 0.7, delay: 0.1, usingSpringWithDamping: 0.7, initialSpringVelocity: -15, options: [], animations: {
+        UIView.animate(withDuration: 0.8, delay: 0.1, usingSpringWithDamping: 0.7, initialSpringVelocity: -15, options: [], animations: {
         
             self.checkImage.alpha = 1
             self.checkImage.transform = .identity
@@ -230,6 +296,35 @@ class CheckImageView: UIView {
         super.init(coder: aDecoder)
     }
     
+    /**
+     Usage example: once you receive a result from the server, you can interrupt the animation based on the result. Optionally, you can pass in a completion handler in a trailing closure to be called at the end of the interruption action.
+     
+     For example:
+     
+     button.perform(action: .showSuccessAnimation) {
+        print("Success."
+     }
+     
+     - Parameter action: Options are .showSuccessAnimation and .showResetAnimation
+     - Parameter completionHandler: Pass in any non-returning function in a trailing closure. For example, in the event of a server error, you can pass an alert as the completion handler.
+     
+    */
+    public func perform(action: Action, andCall completionHandler: @escaping () -> Void = { return } ) {
+        
+        switch action {
+            
+        case .showSuccessAnimation:
+            self.activeProgressIndicatorLayer.removeAllAnimations()
+            self.completion = completionHandler
+            self.showSuccessAnimation()
+        
+        case .showResetAnimation:
+            self.activeProgressIndicatorLayer.removeAllAnimations()
+            self.completion = completionHandler
+            self.resetAnimation()
+            
+        }
+    }
 }
 
 
