@@ -81,8 +81,8 @@ class CheckImageView: UIView {
     
     private final func applyAccessibility() {
         self.isAccessibilityElement = true
-        self.accessibilityHint = "Tap to add item to shopping bag"
-        self.accessibilityLabel = "Add to bag"
+        self.accessibilityHint = "Tap to confirm"
+        self.accessibilityLabel = "Submit Button"
         self.accessibilityActivate()
     }
     
