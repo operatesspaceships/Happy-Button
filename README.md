@@ -22,7 +22,7 @@ A custom, animated confirmation button for iOS with a completion handler. Writte
 
 3. When the animation completes, it can optionally call a completion handler.
      - You can set the completion handler's implementation details by injecting a function into the 'completion' instance property.
-     - If you opt to loop the animation, you can pass in your completionHandler via a trailing closure when you call button.perform(action: andCall: ).
+     - If you opt to loop the animation, you can pass in your completionHandler via a trailing closure when you call button.perform(action: andCall: ).
 
 # Example:
 ```
